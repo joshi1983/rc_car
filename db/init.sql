@@ -11,7 +11,7 @@ create table `user`
 	`id` int primary key auto_increment,
 	`username` varchar(20) not null unique,
 	`password_hash` varchar(32) not null
-)
+);
 
 insert into `car_control_state`
 (`id`, `steering_value`, `speed_value`, `is_desired`) values
