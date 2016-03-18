@@ -1,0 +1,10 @@
+<div class="steering-control">
+	<h2>Steering Value</h2>
+	<div data-bind="compose: { 
+			'model': 'viewmodels/dial',
+			'activationData': {
+				'value': steering_value,
+				'latest_echoed_value': latest_echoed_steering_value
+			}
+		}"></div>
+</div>

@@ -1,0 +1,27 @@
+<div class="rc-car">
+	<div class="row">
+		<div class="col-xs-12 video-display" data-bind="compose: {
+			'model': 'viewmodels/video_display', 
+			'activationData': {
+			}
+		}">
+		</div>
+		<div class="col-sm-6 col-xs-12 steering" data-bind="compose: {
+			'model': 'viewmodels/steering_control', 
+			'activationData': {
+				'steering_value': steering_value,
+				'latest_echoed_steering_value': latest_steering_value 				
+			}
+		}">
+		</div>
+		<div class="col-sm-6 col-xs-12 drive" data-bind="compose: {
+				'model': 'viewmodels/drive_control', 
+				'activationData': {
+					'drive_value': drive_value,
+					'latest_echoed_drive_value': latest_drive_value
+				}
+			}">
+		
+		</div>
+	</div>
+</div>

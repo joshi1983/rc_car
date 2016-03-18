@@ -1,0 +1,10 @@
+<div class="drive-control">
+	<h2>Drive Speed</h2>
+	<div data-bind="compose: {
+			'model': 'viewmodels/dial',
+			'activationData': {
+				'value': drive_value,
+				'latest_echoed_value': latest_echoed_drive_value
+			}
+		}"></div>
+</div>
