@@ -1,0 +1,7 @@
+RewriteEngine on
+#Create friendly URL
+RewriteRule ^(data|cache)($|/) - [L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(api/[a-zA-Z0-9]+)/?$ /rc_car/api/index.php?page=$1 [L,QSA]
