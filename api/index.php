@@ -39,27 +39,30 @@ function validateControlState($controlStateData) {
 	return '';
 }
 
-function saveDesiredControlState($controlStateData) {
+function saveControlState($controlStateData, $is_desired) {
 	global $conn;
 	
 	$msg = validateControlState($controlStateData);
 	if( $msg )
 		throw new Exception($msg);
 	
-	$stmt = $conn->prepare('update car_control_state set steering_value=?, speed_value=? where is_desired=1');
+	$stmt = $conn->prepare('update car_control_state set steering_value=?, speed_value=? where is_desired=?');
 	if ( !$stmt )
 		throw new Exception('Unable to prepare statement.');
 	
-	$stmt->bind_param('dd', $controlStateData['steering_value'], $controlStateData['speed_value']);
+	$stmt->bind_param('ddi', $controlStateData['steering_value'], 
+		$controlStateData['speed_value'], $is_desired);
 	$result = $stmt->execute();
 	 
 	return array('success' => $result);
 }
 
+function saveDesiredControlState($controlStateData) {
+	return saveControlState($controlStateData, 1);
+}
+
 function saveLatestControlState($controlStateData) {
-	$msg = validateControlState($controlStateData);
-	
-	return array();
+	return saveControlState($controlStateData, 0);
 }
 
 // FIXME: process routes.
@@ -67,13 +70,13 @@ function saveLatestControlState($controlStateData) {
 $queryString = $_SERVER["QUERY_STRING"];
 $queryString = substr($queryString, strlen('page='));
 $routes = array(
-	'api/carState' => getCarStates,
-	'api/saveDesiredState' => saveDesiredControlState,
-	'api/saveLatestControlState' => saveLatestControlState
+	'api/carState' => 'getCarStates',
+	'api/saveDesiredState' => 'saveDesiredControlState',
+	'api/saveLatestControlState' => 'saveLatestControlState'
 );
 
 if ( isset($routes[$queryString]) ) {
-	$response = $routes[$queryString]($_REQUEST);
+	$response = call_user_func($routes[$queryString], $_REQUEST);
 	header('Content-type: application/json');
 	echo json_encode($response);
 }
