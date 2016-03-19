@@ -7,17 +7,19 @@
     android:fitsSystemWindows="true"
     tools:context="rc_car.com.carcontroller.MainActivity">
 
+    <EditText android:id="@+id/server_host"
+              android:layout_width="fill_parent"
+              android:layout_height="50dp"
+              android:layout_gravity="top|start"
+              android:singleLine="true"
+              android:hint="server name"/>
+
     <VideoView
     android:id="@+id/video_view"
     android:layout_width="wrap_content"
-    android:layout_height="50dp"
+    android:layout_height="150dp"
     android:layout_gravity="center"/>
 
-    <EditText android:id="@+id/server_host"
-              android:layout_width="fill_parent"
-              android:layout_height="2dp"
-              android:layout_gravity="center"
-        />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
