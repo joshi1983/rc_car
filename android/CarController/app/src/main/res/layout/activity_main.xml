@@ -14,20 +14,20 @@
               android:singleLine="true"
               android:hint="server name"/>
 
-    <VideoView
-    android:id="@+id/video_view"
-    android:layout_width="wrap_content"
-    android:layout_height="150dp"
-    android:layout_gravity="center"/>
-
+    <SurfaceView
+        android:id="@+id/surface_view"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_gravity="center"
+        android:src="#893a3a"/>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/single_photo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
+        android:layout_gravity="bottom|left"
         android:layout_margin="@dimen/fab_margin"
         android:src="@android:drawable/ic_menu_camera"
-        android:onClick="toggleVideoCaptureClicked" />
+        android:onClick="captureSinglePhotoClicked" />
 
 </android.support.design.widget.CoordinatorLayout>

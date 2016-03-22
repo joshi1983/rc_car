@@ -1,67 +1,60 @@
 package rc_car.com.carcontroller;
 
 import android.content.Intent;
+import android.hardware.Camera;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.VideoView;
+import android.hardware.Camera.CameraInfo;
+import android.hardware.Camera.PictureCallback;
+import java.io.File;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_VIDEO_CAPTURE = 1;
-    private VideoView mVideoView;
-    private boolean capturingVideo = false;
-    private FloatingActionButton toggleVideoButton;
+    private static final int TAKE_PHOTO_CODE = 2;
     private EditText serverNameInput;
+    private ImageView imageView;
+    private SurfaceView surfaceView;
+    private CameraUtils cameraUtils = new CameraUtils();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        toggleVideoButton = (FloatingActionButton) findViewById(R.id.fab);
+        surfaceView = (SurfaceView)findViewById(R.id.surface_view);
+
         serverNameInput = (EditText)findViewById(R.id.server_host);
-        mVideoView = (VideoView)findViewById(R.id.video_view);
-        mVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                mVideoView.start();
-                mp.setLooping(true);
-
-            }
-        });
-    }
-
-    private void videoStoppedCapturing() {
-        toggleVideoButton.setImageResource(android.R.drawable.ic_menu_camera);
-        capturingVideo = false;
-    }
-
-    public void toggleVideoCaptureClicked(View view) {
-        if (capturingVideo) {
-            videoStoppedCapturing();
-        } else {
-            capturingVideo = true;
-            toggleVideoButton.setImageResource(android.R.drawable.btn_minus);
-            Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-            if (takeVideoIntent.resolveActivity(getPackageManager()) != null) {
-                startActivityForResult(takeVideoIntent, REQUEST_VIDEO_CAPTURE);
-            }
-        }
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        if (requestCode == REQUEST_VIDEO_CAPTURE && resultCode == RESULT_OK) {
-            Uri videoUri = intent.getData();
-            videoStoppedCapturing();
-            mVideoView.setVideoURI(videoUri);
+    public void onResume() {
+        super.onResume();
+        surfaceView.setVisibility(View.INVISIBLE);
+        surfaceView.setVisibility(View.VISIBLE);
+    }
+
+    public void captureSinglePhotoClicked(View view) {
+        Log.d("CameraDemo", "Device has camera: " + cameraUtils.hasCamera(this));
+        try {
+            cameraUtils.startCamera(this, surfaceView.getHolder());
+        }
+        catch (IOException ioE) {
+            Log.d("CameraDemo", "problem in startCamera.  message: "
+                    + ioE.getMessage() + ", stack: " + ioE.getStackTrace());
         }
     }
 
