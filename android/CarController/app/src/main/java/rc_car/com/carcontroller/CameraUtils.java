@@ -10,6 +10,13 @@ import java.io.IOException;
 public class CameraUtils {
     private Camera camera;
     private boolean cameraFront;
+    private Camera.PreviewCallback previewCallback;
+
+    public void setPreviewCallback(Camera.PreviewCallback previewCallback) {
+        this.previewCallback = previewCallback;
+        if (camera != null && previewCallback != null)
+            camera.setPreviewCallback(previewCallback);
+    }
 
     public void startCamera(Context context, SurfaceHolder previewer) throws IOException {
         if (camera != null)
@@ -17,6 +24,8 @@ public class CameraUtils {
         if (hasCamera(context)) {
             camera = Camera.open();
             camera.setPreviewDisplay(previewer);
+            if (this.previewCallback != null)
+                camera.setPreviewCallback(this.previewCallback);
             camera.startPreview();
         }
         else {
@@ -28,6 +37,10 @@ public class CameraUtils {
         camera.stopPreview();
         camera.release();
         camera = null;
+    }
+
+    public boolean isRecording() {
+        return camera != null;
     }
 
     public boolean hasCamera(Context context) {
