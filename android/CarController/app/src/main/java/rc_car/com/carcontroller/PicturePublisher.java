@@ -72,7 +72,7 @@ public class PicturePublisher implements Camera.PreviewCallback, PublishURLChang
         // send the data as multipart form data.
         String lineEnd = "\r\n";
         String twoHyphens = "--";
-        String boundary = "*****";
+        String boundary = "-----WebKitFormBoundaryuxA2kznkujLtKT4i";
 
         // Open a HTTP connection to the URL
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -80,19 +80,27 @@ public class PicturePublisher implements Camera.PreviewCallback, PublishURLChang
         conn.setDoOutput(true); // Allow Outputs
         conn.setUseCaches(false); // Don't use a Cached Copy
         conn.setRequestMethod("POST");
-        conn.setRequestProperty("Connection", "Keep-Alive");
-        conn.setRequestProperty("ENCTYPE",
-                "multipart/form-data");
+        conn.setRequestProperty("Connection", "keep-alive");
+        conn.setRequestProperty("Cache-Control", "max-age=0");
+        conn.setRequestProperty("ENCTYPE", "multipart/form-data");
+        conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+        conn.setRequestProperty("frame", "temp.jpg");
+
         DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
 
         dos.writeBytes(twoHyphens + boundary + lineEnd);
-        dos.writeBytes("Content-Disposition: form-data; name=\"frame\";filename=\""
+        dos.writeBytes("Content-Disposition: form-data; name=\"frame\"; filename=\""
                 + "temp.jpg\"" + lineEnd);
+        dos.writeBytes("Content-Type: image/jpeg" + lineEnd);
+        dos.writeBytes("Content-Transfer-Encoding: binary" + lineEnd);
+        dos.writeBytes(lineEnd);
 
         dos.write(imageData);
-        // send multipart form data necesssary after file data...
+
         dos.writeBytes(lineEnd);
         dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+        dos.flush();
+        dos.close();
 
         int responseCode = conn.getResponseCode();
         if (responseCode != 200) {
@@ -111,7 +119,6 @@ public class PicturePublisher implements Camera.PreviewCallback, PublishURLChang
             Log.d("CameraDemo", "picture upload response: " + responseText);
             is.close();
         }
-        dos.flush();
         dos.close();
     }
 
