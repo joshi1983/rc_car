@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Config {
-    private String hostName = "";
+    private String hostName = "192.168.1.53:8000";
     private String protocol = "http";
     private List<PublishURLChangeListener> publishURLChangeListeners = new LinkedList<PublishURLChangeListener>();
 
@@ -35,7 +35,7 @@ public class Config {
     }
 
     public String getPicturePublishURL() {
-        return protocol + "://" + getServerHost() + "/api/saveCameraFrame";
+        return protocol + "://" + getServerHost() + "/rc_car/api/saveCameraFrame";
     }
 
     public void save() {
