@@ -65,19 +65,80 @@ function saveLatestControlState($controlStateData) {
 	return saveControlState($controlStateData, 0);
 }
 
-// FIXME: process routes.
-// map routes to functions.
+$cameraFrameFile = 'data/temp.jpg';
+
+function saveCameraFrame($frameData) {
+	global $cameraFrameFile;
+	
+	// check that there is a 'frame' specified.
+	if (!isset($_FILES['frame']))
+		throw new Exception('frame must be specified as a file parameter');
+	if (!isset($_FILES['frame']['size']))
+		throw new Exception('frame size must be specified');
+	if (!isset($_FILES["frame"]["tmp_name"]))
+		throw new Exception('frame tmp_name must be specified');
+	
+	$filename = $_FILES["frame"]["name"];
+	$extension = pathinfo($filename, PATHINFO_EXTENSION);
+	$extension = strtolower($extension);
+	if ($extension != 'jpg')
+		throw new Exception('extension of uploaded frame must be jpg.  '
+			.'Actual extension: '.$extension);
+
+	// check that the file size indicates that the file may be jpeg.
+	// 125 bytes is the size of a 1 by 1 pixel jpeg.
+	// 50 000 - 200 0000 is roughly the expected range.
+	// 10 000 000 is extremely large.
+	$fileSize = $_FILES['frame']['size'];
+	if ($fileSize < 125 || $fileSize > 10000000)
+		throw new Exception('frame file size must be in 125..10000000 but is ' . $fileSize);
+
+	$target_file = $cameraFrameFile;
+	// save to file system.
+	if (move_uploaded_file($_FILES["frame"]["tmp_name"], $target_file)) {
+		
+	}
+	else
+		throw new Exception('Unable to move to target file: ' . $target_file);
+	
+	$result = array('success' => true);
+	return $result;
+}
+
+function getCameraFrame() {
+	global $cameraFrameFile;
+	$size = filesize($cameraFrameFile);
+	
+	header('Content-Type: image/jpeg');
+	header('Content-Length: '.$size);
+	
+	$fp = fopen($cameraFrameFile, 'rb');
+	fpassthru($fp);
+	exit;
+}
+
 $queryString = $_SERVER["QUERY_STRING"];
 $queryString = substr($queryString, strlen('page='));
 $routes = array(
 	'api/carState' => 'getCarStates',
+	'api/saveCameraFrame' => 'saveCameraFrame',
+	'api/getCameraFrame' => 'getCameraFrame',
 	'api/saveDesiredState' => 'saveDesiredControlState',
 	'api/saveLatestControlState' => 'saveLatestControlState'
 );
 
 if ( isset($routes[$queryString]) ) {
-	$response = call_user_func($routes[$queryString], $_REQUEST);
-	header('Content-type: application/json');
+	try {
+		$response = call_user_func($routes[$queryString], $_REQUEST);
+	}
+	catch (Exception $e) {
+		$response = array('msg' => $e->getMessage());
+		$fp = fopen('log.txt', 'a+');
+		fprintf($fp, 'Message: ' . $e->getMessage() . "\r\n");
+		fclose($fp);
+		http_response_code(500);
+	}
+	header('Content-Type: application/json');
 	echo json_encode($response);
 }
 else {
