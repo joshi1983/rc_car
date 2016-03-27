@@ -1,13 +1,6 @@
 package rc_car.com.carcontroller;
 
-import android.content.Intent;
-import android.hardware.Camera;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.SurfaceView;
@@ -16,10 +9,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.VideoView;
-import android.hardware.Camera.CameraInfo;
-import android.hardware.Camera.PictureCallback;
-import java.io.File;
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
@@ -29,6 +18,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageView;
     private SurfaceView surfaceView;
     private CameraUtils cameraUtils = new CameraUtils();
+    private PicturePublisher picturePublisher;
+    private Config config = new Config();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +27,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         surfaceView = (SurfaceView)findViewById(R.id.surface_view);
-
         serverNameInput = (EditText)findViewById(R.id.server_host);
+        String host = config.getServerHost();
+        serverNameInput.setText(host);
+        picturePublisher = new PicturePublisher(config.getPicturePublishURL());
+        config.addPublishURLChangeListener(picturePublisher);
+        cameraUtils.setPreviewCallback(picturePublisher);
+        Log.d("CameraDemo", "Set picturePublisher for preview callbacks");
     }
 
     @Override
@@ -47,14 +43,18 @@ public class MainActivity extends AppCompatActivity {
         surfaceView.setVisibility(View.VISIBLE);
     }
 
-    public void captureSinglePhotoClicked(View view) {
+    public void toggleRecordingClicked(View view) {
         Log.d("CameraDemo", "Device has camera: " + cameraUtils.hasCamera(this));
-        try {
-            cameraUtils.startCamera(this, surfaceView.getHolder());
+        if (cameraUtils.isRecording()) {
+            cameraUtils.stopCamera();
         }
-        catch (IOException ioE) {
-            Log.d("CameraDemo", "problem in startCamera.  message: "
-                    + ioE.getMessage() + ", stack: " + ioE.getStackTrace());
+        else {
+            try {
+                cameraUtils.startCamera(this, surfaceView.getHolder());
+            } catch (IOException ioE) {
+                Log.d("CameraDemo", "problem in startCamera.  message: "
+                        + ioE.getMessage());
+            }
         }
     }
 
