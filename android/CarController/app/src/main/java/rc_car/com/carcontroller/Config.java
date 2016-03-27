@@ -1,9 +1,22 @@
 package rc_car.com.carcontroller;
 
+import java.util.LinkedList;
+import java.util.List;
 
 public class Config {
     private String hostName = "";
     private String protocol = "http";
+    private List<PublishURLChangeListener> publishURLChangeListeners = new LinkedList<PublishURLChangeListener>();
+
+    private void dispatchPublishURLChanged() {
+        for (PublishURLChangeListener urlChangeListener: publishURLChangeListeners) {
+            urlChangeListener.publishURLChanged(getPicturePublishURL());
+        }
+    }
+
+    public void addPublishURLChangeListener(PublishURLChangeListener urlChangeListener) {
+        publishURLChangeListeners.add(urlChangeListener);
+    }
 
     public void setHostName(String hostName) {
         if (hostName == null)
@@ -14,6 +27,7 @@ public class Config {
             throw new IllegalArgumentException("Host name too short");
 
         this.hostName = hostName;
+        dispatchPublishURLChanged();
     }
 
     public String getServerHost() {
