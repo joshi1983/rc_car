@@ -72,7 +72,7 @@ function saveCameraFrame($frameData) {
 	
 	// check that there is a 'frame' specified.
 	if (!isset($_FILES['frame']))
-		throw new Exception('frame must be specified as a file parameter');
+		throw new Exception('frame must be specified as a file parameter.  $_FILES = ' . print_r($_FILES, true) . ', _POST = '. print_r($_POST, true));
 	if (!isset($_FILES['frame']['size']))
 		throw new Exception('frame size must be specified');
 	if (!isset($_FILES["frame"]["tmp_name"]))
@@ -90,6 +90,8 @@ function saveCameraFrame($frameData) {
 	// 50 000 - 200 0000 is roughly the expected range.
 	// 10 000 000 is extremely large.
 	$fileSize = $_FILES['frame']['size'];
+	if ($fileSize === 0)
+		throw new Exception("frame file size = 0.  _FILES = " . print_r($_FILES, true));
 	if ($fileSize < 125 || $fileSize > 10000000)
 		throw new Exception('frame file size must be in 125..10000000 but is ' . $fileSize);
 
@@ -133,10 +135,14 @@ if ( isset($routes[$queryString]) ) {
 	}
 	catch (Exception $e) {
 		$response = array('msg' => $e->getMessage());
-		$fp = fopen('log.txt', 'a+');
-		fprintf($fp, 'Message: ' . $e->getMessage() . "\r\n");
-		fclose($fp);
 		http_response_code(500);
+		$fp = fopen('log.txt', 'a+');
+		if ($fp) {
+			fputs($fp, 'Message: ' . $e->getMessage() . "\r\n");
+			fclose($fp);
+		}
+		else
+			$response['msg'] .= '  Also, unable to append to log file';
 	}
 	header('Content-Type: application/json');
 	echo json_encode($response);
