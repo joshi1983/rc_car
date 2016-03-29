@@ -7,6 +7,9 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import java.io.IOException;
 
+/**
+ * CameraUtils wraps up functionality for controling and getting images from the Android camera device.
+ */
 public class CameraUtils {
     private Camera camera;
     private boolean cameraFront;
