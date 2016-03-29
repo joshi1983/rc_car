@@ -65,6 +65,41 @@ function saveLatestControlState($controlStateData) {
 	return saveControlState($controlStateData, 0);
 }
 
+function setRecordingVideo($isRecording) {
+	global $conn;
+	
+	$isRecording = $isRecording ? 1 : 0;
+	
+	$stmt = $conn->prepare('update preference set is_recording=?');
+	if ( !$stmt )
+		throw new Exception('Unable to prepare statement.');
+	
+	$stmt->bind_param('i', $isRecording);
+	$result = $stmt->execute();	
+	return array('success' => true);
+}
+
+function startRecording($data) {
+	return setRecordingVideo(true);
+}
+
+function stopRecording($data) {
+	return setRecordingVideo(false);
+}
+
+function getPreferences($data) {
+	global $conn;
+	require_once('model/preference.php');
+
+	$res = $conn->query('select * from preference');
+	$rawData = $res->fetch_assoc();
+	$newPreference = new Preference($rawData);
+	$result = $newPreference->getData();
+	$res->close();
+	
+	return $result;
+}
+
 $cameraFrameFile = 'data/temp.jpg';
 
 function saveCameraFrame($frameData) {
@@ -130,8 +165,11 @@ $routes = array(
 	'api/carState' => 'getCarStates',
 	'api/saveCameraFrame' => 'saveCameraFrame',
 	'api/getCameraFrame' => 'getCameraFrame',
+	'api/getPreferences' => 'getPreferences',
 	'api/saveDesiredState' => 'saveDesiredControlState',
-	'api/saveLatestControlState' => 'saveLatestControlState'
+	'api/saveLatestControlState' => 'saveLatestControlState',
+	'api/startRecording' => 'startRecording',
+	'api/stopRecording' => 'stopRecording'
 );
 
 if (strpos($queryString, 'api/getCameraFrame') === 0) {
