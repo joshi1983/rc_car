@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
     private SurfaceView surfaceView;
     private CameraUtils cameraUtils = new CameraUtils();
     private PicturePublisher picturePublisher;
-    private Config config = new Config();
+    private Config config = Config.getSingleton();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
