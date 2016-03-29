@@ -7,6 +7,19 @@ public class Config {
     private String hostName = "192.168.1.53:8000";
     private String protocol = "http";
     private List<PublishURLChangeListener> publishURLChangeListeners = new LinkedList<PublishURLChangeListener>();
+    private static Config singleton = new Config();
+
+    private Config() {
+
+    }
+
+    public static Config getSingleton() {
+        return singleton;
+    }
+
+    public boolean isServerRunning() {
+        return true;
+    }
 
     private void dispatchPublishURLChanged() {
         for (PublishURLChangeListener urlChangeListener: publishURLChangeListeners) {
