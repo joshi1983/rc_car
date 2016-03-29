@@ -47,6 +47,10 @@ public class Config {
         return hostName;
     }
 
+    public String getPreferencesURL() {
+        return protocol + "://" + getServerHost() + "/rc_car/api/preferences";
+    }
+
     public String getPicturePublishURL() {
         return protocol + "://" + getServerHost() + "/rc_car/api/saveCameraFrame";
     }

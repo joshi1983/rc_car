@@ -1,5 +1,11 @@
 package rc_car.com.carcontroller;
 
+import android.util.Log;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 /**
  * RemoteSettings is responsible for downloading preferences from the web
  * application and, on rare occasions, sending preferences to it.
@@ -19,7 +25,17 @@ public class RemoteSettings {
 
     private void downloadSettings() {
         // send HTTP request to server to get settings.
-
+        try {
+            URL url = new URL(config.getPreferencesURL());
+            Object responseData = url.getContent();
+            // FIXME: copy the responseData into isRecording.
+        }
+        catch (MalformedURLException e) {
+            Log.d("RemoteSettings", "Unable to download preferences due to bad URL: " + e.getMessage());
+        }
+        catch (IOException ioe) {
+            Log.d("RemoteSettings", "Unable to download preferences: " + ioe.getMessage());
+        }
     }
 
     /**
