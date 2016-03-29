@@ -13,6 +13,15 @@ create table `user`
 	`password_hash` varchar(32) not null
 );
 
+create table `preference`
+(
+	`id` int primary key auto_increment,
+	`is_recording` tinyint(1) default 0
+);
+
+insert into `preference`(id, is_recording) values
+(1, 0);
+
 insert into `car_control_state`
 (`id`, `steering_value`, `speed_value`, `is_desired`) values
 (1, 0, 0, 1),
