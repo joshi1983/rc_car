@@ -1,5 +1,6 @@
 package rc_car.com.carcontroller;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -17,7 +18,6 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_VIDEO_CAPTURE = 1;
     private static final int TAKE_PHOTO_CODE = 2;
-    private EditText serverNameInput;
     private ImageView imageView;
     private SurfaceView surfaceView;
     private CameraUtils cameraUtils = new CameraUtils();
@@ -30,9 +30,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         surfaceView = (SurfaceView)findViewById(R.id.surface_view);
-        serverNameInput = (EditText)findViewById(R.id.server_host);
         String host = config.getServerHost();
-        serverNameInput.setText(host);
         picturePublisher = new PicturePublisher(config.getPicturePublishURL());
         config.addPublishURLChangeListener(picturePublisher);
         cameraUtils.setPreviewCallback(picturePublisher);
@@ -44,6 +42,11 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         surfaceView.setVisibility(View.INVISIBLE);
         surfaceView.setVisibility(View.VISIBLE);
+    }
+
+    public void settingsClicked(View view) {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
     }
 
     public void toggleRecordingClicked(View view) {
