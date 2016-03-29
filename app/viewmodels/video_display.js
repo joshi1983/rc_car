@@ -42,7 +42,7 @@ function VideoDisplay() {
 	
 	function downloadPreferences() {
 		$.ajax({
-			'url': 'api/getPreferences',
+			'url': 'api/preferences',
 			'method': 'GET',
 			'dataType': 'json',
 			'success': function(response) {
