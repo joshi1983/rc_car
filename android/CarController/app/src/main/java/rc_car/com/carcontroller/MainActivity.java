@@ -11,6 +11,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import java.io.IOException;
 
+/**
+ * MainActivity is the main UI for previewing camera footage
+ * */
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_VIDEO_CAPTURE = 1;
     private static final int TAKE_PHOTO_CODE = 2;
