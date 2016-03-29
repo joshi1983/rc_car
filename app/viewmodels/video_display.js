@@ -6,6 +6,8 @@ function VideoDisplay() {
 	var is_recording = ko.observable(false);
 	var image_url = ko.observable();
 	var refreshRate = 100;
+	var refreshPreferencesRate = 3000;
+	var refreshPreferencesTimerId = undefined;
 	var timerId = undefined;
 
 	self.getImageURL = function() {
@@ -82,6 +84,13 @@ function VideoDisplay() {
 	self.activate = function() {
 		updateAutoRefresher();
 		downloadPreferences();
+		refreshPreferencesTimerId = window.setInterval(downloadPreferences, refreshPreferencesRate);
+	};
+	
+	self.detached = function() {
+		window.clearInterval(refreshPreferencesTimerId);
+		if (timerId)
+			window.clearInterval(timerId);
 	};
 }
 
