@@ -1,6 +1,11 @@
 <div class="video-display">
 	<h2>Video Display</h2>
 	
-	<div>
+	<div class="image" data-bind="style: { 'backgroundImage': 'url(\'' + $data.getImageURL() + '\')'}">
+	</div>
+	
+	<div class="controls">
+		<div class="glyphicon glyphicon-record" data-bind="click: startRecording, css: {'on': isRecording()}"></div>
+		<div class="glyphicon glyphicon-stop" data-bind="click: stopRecording, css: {'on': !isRecording()}"></div>
 	</div>
 </div>
