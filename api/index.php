@@ -115,7 +115,12 @@ function getCameraFrame() {
 	header('Content-Length: '.$size);
 	
 	$fp = fopen($cameraFrameFile, 'rb');
-	fpassthru($fp);
+	if (flock($fp, LOCK_SH)) {
+		fpassthru($fp);
+		fflush($fp);
+		flock($fp, LOCK_UN);
+	}
+	fclose($fp);
 	exit;
 }
 
@@ -128,6 +133,10 @@ $routes = array(
 	'api/saveDesiredState' => 'saveDesiredControlState',
 	'api/saveLatestControlState' => 'saveLatestControlState'
 );
+
+if (strpos($queryString, 'api/getCameraFrame') === 0) {
+	$queryString = 'api/getCameraFrame';
+}
 
 if ( isset($routes[$queryString]) ) {
 	try {
