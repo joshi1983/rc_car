@@ -15,7 +15,7 @@ import java.io.IOException;
 /**
  * MainActivity is the main UI for previewing camera footage
  * */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements VideoRecordingListener {
     private static final int REQUEST_VIDEO_CAPTURE = 1;
     private static final int TAKE_PHOTO_CODE = 2;
     private ImageView imageView;
@@ -23,6 +23,21 @@ public class MainActivity extends AppCompatActivity {
     private CameraUtils cameraUtils = new CameraUtils();
     private PicturePublisher picturePublisher;
     private Config config = Config.getSingleton();
+
+    @Override
+    public void recordingStopped() {
+        cameraUtils.stopCamera();
+    }
+
+    @Override
+    public void recordingStarted() {
+        try {
+            cameraUtils.startCamera(this, surfaceView.getHolder());
+        } catch (IOException ioE) {
+            Log.d("CameraDemo", "problem in startCamera.  message: "
+                    + ioE.getMessage());
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,17 +65,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void toggleRecordingClicked(View view) {
-        Log.d("CameraDemo", "Device has camera: " + cameraUtils.hasCamera(this));
         if (cameraUtils.isRecording()) {
-            cameraUtils.stopCamera();
+            recordingStopped();
         }
         else {
-            try {
-                cameraUtils.startCamera(this, surfaceView.getHolder());
-            } catch (IOException ioE) {
-                Log.d("CameraDemo", "problem in startCamera.  message: "
-                        + ioE.getMessage());
-            }
+            recordingStarted();
         }
     }
 
