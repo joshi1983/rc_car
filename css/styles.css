@@ -80,3 +80,13 @@ body h2 {
 	width: 100%;
 	display: block;
 }
+
+@media (max-width: 768px) {
+	body .video-display {
+		height: 50vh;
+	}
+	
+	body .steering, body .drive {
+		height: 25vh;
+	}
+}
