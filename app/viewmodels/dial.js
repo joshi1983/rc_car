@@ -27,9 +27,12 @@ function Dial() {
 		canvas.attr('height', h);
 		canvas.height(h);
 		canvas.width(w);
-		var diameter = Math.min(w, h);
+		var lineWidthRatio = 0.015;
+		var diameter = Math.min(w, h) * (1 - (2 * lineWidthRatio));
 		var g = canvas[0].getContext('2d');
+		var lineWidth = Math.ceil(diameter * lineWidthRatio);
 		g.strokeStyle = '#000';
+		g.lineWidth = lineWidth;
 		g.fillStyle = '#cde';
 		g.beginPath();		
 		var cx = w / 2;
@@ -86,11 +89,16 @@ function Dial() {
 		value.subscribe(drawDial);
 		latest_echoed_value.subscribe(drawDial);
 	};
-	
+
 	self.compositionComplete = function() {
 		drawDial();
+		$(window).on('resize orientationChange', drawDial);
 	};
-	
+
+	self.detached = function() {
+		$(window).off('resize orientationChange', drawDial);
+	};
+
 	self.dialClicked = function(data, event) {
 		var root_element = $('#' + self.unique_id);
 		if( root_element.length > 0 ) {
@@ -105,7 +113,7 @@ function Dial() {
 			self.setValue(newValue);
 		}
 	};
-	
+
 	self.setValue = function(newValue) {
 		if( typeof newValue !== 'number' || isNaN(newValue) )
 			throw new Error('dial setValue requires number parameter.  newValue: ' + newValue);
@@ -117,7 +125,7 @@ function Dial() {
 		
 		value(newValue);
 	};
-	
+
 	self.getValue = function() {
 		return value();
 	};
