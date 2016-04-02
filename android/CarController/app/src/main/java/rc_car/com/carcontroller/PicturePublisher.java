@@ -20,6 +20,7 @@ public class PicturePublisher implements Camera.PreviewCallback, PublishURLChang
     private String publishURL;
     private URL url;
     private PictureUploaderTask uploaderTask = new PictureUploaderTask();
+    private int publishBacklogCount = 0;
 
     public PicturePublisher(String publishURL) {
         this.setPublishURL(publishURL);
@@ -126,12 +127,19 @@ public class PicturePublisher implements Camera.PreviewCallback, PublishURLChang
 
         @Override
         protected Void doInBackground(byte[]... jpegData) {
-            Log.d("CameraPublisher", "PictureUploaderTask, doInBackground called.  publish URL: " + publishURL);
             try {
-                sendImageDataToServer(jpegData[0]);
+                if (publishBacklogCount < 2) {
+
+                    Log.d("CameraPublisher", "PictureUploaderTask, doInBackground called.  publish URL: " + publishURL);
+                    try {
+                        sendImageDataToServer(jpegData[0]);
+                    } catch (IOException e) {
+                        Log.d("CameraPublisher", "Problem sending jpeg image: " + e.getMessage());
+                    }
+                }
             }
-            catch (IOException e) {
-                Log.d("CameraPublisher", "Problem sending jpeg image: " + e.getMessage());
+            finally {
+                publishBacklogCount--;
             }
             return null;
         }
@@ -161,6 +169,7 @@ public class PicturePublisher implements Camera.PreviewCallback, PublishURLChang
                 Log.d("CameraPublisher", "jpegData is null.");
                 return;
             }
+            publishBacklogCount++;
             new PictureUploaderTask().execute(jpegData);
             //Log.d("CameraPublisher", "sent image data to server. jpeg data size = " + jpegData.length);
         }
