@@ -1,10 +1,21 @@
 package rc_car.com.carcontroller;
 
+import android.os.AsyncTask;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 
 /**
  * RemoteSettings is responsible for downloading preferences from the web
@@ -14,29 +25,122 @@ public class RemoteSettings {
     private boolean isRecording;
     private Config config = Config.getSingleton();
     private int updateInterval = 2000;
-    private VideoRecordingListener listener;
+    private RemoteSettingsListener listener;
 
-    public RemoteSettings(VideoRecordingListener listener) {
+    public RemoteSettings(RemoteSettingsListener listener) {
         if (listener == null)
             throw new NullPointerException("Listener must not be null");
 
         this.listener = listener;
+        new SettingsDownloadThread().start();
+    }
+
+    /**
+     * For continuously retrieving settings from the web application
+     * */
+    private class SettingsDownloadThread extends Thread {
+        public void run() {
+            try {
+                while (true) {
+                    downloadSettings();
+                    Thread.sleep(updateInterval);
+                }
+            }
+            catch (InterruptedException interuption) {
+                Log.d("RemoteSettings", "SettingsDownloadThread was interrupted: " + interuption);
+            }
+        }
+    }
+
+    /**
+     *
+     * Copied from: http://stackoverflow.com/questions/4308554/simplest-way-to-read-json-from-a-url-in-java
+     * */
+    private static String readAll(Reader rd) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        int cp;
+        while ((cp = rd.read()) != -1) {
+            sb.append((char) cp);
+        }
+        return sb.toString();
+    }
+
+    /**
+     *
+     * Copied from: http://stackoverflow.com/questions/4308554/simplest-way-to-read-json-from-a-url-in-java
+     * */
+    public static JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
+        InputStream is = new URL(url).openStream();
+        try {
+            BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+            String jsonText = readAll(rd);
+            JSONObject json = new JSONObject(jsonText);
+            return json;
+        } finally {
+            is.close();
+        }
     }
 
     private void downloadSettings() {
         // send HTTP request to server to get settings.
         try {
-            URL url = new URL(config.getPreferencesURL());
-            Object responseData = url.getContent();
-            // FIXME: copy the responseData into isRecording.
+            JSONObject json = readJsonFromUrl(config.getPreferencesURL());
+            boolean newIsRecordingValue = json.getBoolean("is_recording");
+            if (isRecording != newIsRecordingValue) {
+                isRecording = newIsRecordingValue;
+                if (isRecording)
+                    listener.recordingStarted();
+                else
+                    listener.recordingStopped();
+            }
+            json = readJsonFromUrl(config.getCarStateURL());
+            JSONObject desired = json.getJSONObject("desired");
+            listener.setSpeedValue(desired.getDouble("speed_value"));
+            listener.setSteeringValue(desired.getDouble("steering_value"));
         }
         catch (MalformedURLException e) {
             Log.d("RemoteSettings", "Unable to download preferences due to bad URL: " + e.getMessage());
+        }
+        catch (JSONException jsonE) {
+            Log.d("RemoteSettings", "JSON parsing error: " + jsonE.getMessage());
         }
         catch (IOException ioe) {
             Log.d("RemoteSettings", "Unable to download preferences: " + ioe.getMessage());
         }
     }
+
+    private static void sendPostRequestToURL(String url) {
+        try {
+            HttpURLConnection http = (HttpURLConnection)(new URL(url).openConnection());
+            http.setRequestMethod("POST");
+            http.setUseCaches(false);
+            http.setDoInput(true);
+            http.setDoOutput(false);
+            http.connect();
+            InputStream in = new BufferedInputStream(http.getInputStream());
+            in.read();
+            http.disconnect();
+        }
+        catch (Exception e) {
+            Log.d("RemoteSettings", "Problem: " + e.getMessage() + ", description: " + e.toString());
+        }
+    }
+
+    /**
+     * A task for sending HTTP POST requests to a specific URL
+     *
+     * Used to keep the HTTP post sending off the main UI thread
+     * */
+    private class HttpPostTask extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected Void doInBackground(String... urls) {
+            Log.d("RemoteSettings", "HttpPostTask, doInBackground called.  publish URL: " + urls[0]);
+            sendPostRequestToURL(urls[0]);
+            return null;
+        }
+    }
+
 
     /**
      * Called when an end user of this native application wants to start recording.
@@ -48,8 +152,7 @@ public class RemoteSettings {
         isRecording = true;
         listener.recordingStarted();
         if (config.isServerRunning()) {
-            // FIXME: if config.isServerRunning(), make api call to 'api/startRecording'.
-
+            new HttpPostTask().execute(config.getStartRecordingURL());
         }
     }
 
@@ -63,8 +166,7 @@ public class RemoteSettings {
         isRecording = false;
         listener.recordingStopped();
         if (config.isServerRunning()) {
-            // FIXME: if config.isServerRunning(), make api call to 'api/stopRecording'.
-
+            new HttpPostTask().execute(config.getStopRecordingURL());
         }
     }
 }

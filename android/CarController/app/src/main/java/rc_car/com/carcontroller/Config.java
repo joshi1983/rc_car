@@ -47,6 +47,27 @@ public class Config {
         return hostName;
     }
 
+    /**
+     * For use in RemoteSettings class
+     * */
+    public String getCarStateURL() {
+        return protocol + "://" + getServerHost() + "/rc_car/api/getCarStates";
+    }
+
+    /**
+     * For use in RemoteSettings class
+     * */
+    public String getStartRecordingURL() {
+        return protocol + "://" + getServerHost() + "/rc_car/api/startRecording";
+    }
+
+    /**
+     * For use in RemoteSettings class
+     * */
+    public String getStopRecordingURL() {
+        return protocol + "://" + getServerHost() + "/rc_car/api/stopRecording";
+    }
+
     public String getPreferencesURL() {
         return protocol + "://" + getServerHost() + "/rc_car/api/preferences";
     }
