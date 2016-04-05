@@ -15,7 +15,7 @@ import java.io.IOException;
 /**
  * MainActivity is the main UI for previewing camera footage
  * */
-public class MainActivity extends AppCompatActivity implements VideoRecordingListener {
+public class MainActivity extends AppCompatActivity implements RemoteSettingsListener {
     private static final int REQUEST_VIDEO_CAPTURE = 1;
     private static final int TAKE_PHOTO_CODE = 2;
     private ImageView imageView;
@@ -23,6 +23,14 @@ public class MainActivity extends AppCompatActivity implements VideoRecordingLis
     private CameraUtils cameraUtils = new CameraUtils();
     private PicturePublisher picturePublisher;
     private Config config = Config.getSingleton();
+
+    @Override
+    public void setSteeringValue(double newValue) {
+    }
+
+    @Override
+    public void setSpeedValue(double newValue) {
+    }
 
     @Override
     public void recordingStopped() {
