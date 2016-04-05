@@ -176,20 +176,27 @@ if (strpos($queryString, 'api/getCameraFrame') === 0) {
 	$queryString = 'api/getCameraFrame';
 }
 
+function logMessage($msg) {
+	$fp = fopen('log.txt', 'a+');
+	if ($fp) {
+		fputs($fp, '%s - Message: %s'."\r\n", date("l"), $msg);
+		fclose($fp);
+	}
+	else
+		return '  Also, unable to append to log file';
+}
+
 if ( isset($routes[$queryString]) ) {
+	logMessage('Processing request for route: ' + $queryString);
 	try {
 		$response = call_user_func($routes[$queryString], $_REQUEST);
 	}
 	catch (Exception $e) {
-		$response = array('msg' => $e->getMessage());
+		$response = array('msg' => 'ERROR: '.$e->getMessage());
 		http_response_code(500);
-		$fp = fopen('log.txt', 'a+');
-		if ($fp) {
-			fputs($fp, 'Message: ' . $e->getMessage() . "\r\n");
-			fclose($fp);
-		}
-		else
-			$response['msg'] .= '  Also, unable to append to log file';
+		$extraMessage = logMessage($e->getMessage());
+		if ($extraMessage)
+			$response['msg'] .= $extraMessage;
 	}
 	header('Content-Type: application/json');
 	echo json_encode($response);
