@@ -1,4 +1,4 @@
 <div class="dial" data-bind="attr: { 'id': unique_id }">
-	<span data-bind="text: getValue()"></span>
+	<span class="value" data-bind="text: getFormattedValue()"></span>
 	<canvas data-bind="click: dialClicked"></canvas>
 </div>

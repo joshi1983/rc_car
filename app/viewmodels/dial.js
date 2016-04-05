@@ -5,8 +5,8 @@ function Dial() {
 	var self = this;
 
 	self.unique_id = UniqueGenerator.generateUniqueId();
-	var minVal = ko.observable(-10);
-	var maxVal = ko.observable(10);
+	var minVal = ko.observable(-90);
+	var maxVal = ko.observable(90);
 	var value; // replaced in activate method
 	var latest_echoed_value; // replaced in activate method
 	
@@ -128,6 +128,15 @@ function Dial() {
 
 	self.getValue = function() {
 		return value();
+	};
+	
+	self.getFormattedValue = function() {
+		var result = "" + value();
+		var decimalsPrecision = 2;
+		var factor = Math.pow(10, decimalsPrecision);
+		result = Math.round(result * factor) / (1.0 * factor);
+		
+		return result;
 	};
 }
 
