@@ -1,15 +1,14 @@
 package rc_car.com.carcontroller;
 
+import android.content.Context;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.EditText;
 
 public class SettingsActivity extends AppCompatActivity {
     private EditText serverNameInput;
+    private EditText usbDevicesList;
     private Config config = Config.getSingleton();
 
     @Override
@@ -19,15 +18,21 @@ public class SettingsActivity extends AppCompatActivity {
 
         serverNameInput = (EditText)findViewById(R.id.server_host);
         serverNameInput.setText(config.getServerHost());
+        usbDevicesList = (EditText)findViewById(R.id.usb_devices);
+    }
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // close activity.
+    private String testArduinoConnection() {
+        return ArduinoIO.getUSBDevicesDescription(this);
+    }
 
-            }
-        });
+    private String testServerConnection() {
+        String result = "";
+
+        return result;
+    }
+
+    public void testConnections(View v) {
+        usbDevicesList.setText(testArduinoConnection());
     }
 
 }
