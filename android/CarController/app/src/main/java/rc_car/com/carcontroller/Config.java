@@ -9,6 +9,10 @@ public class Config {
     private List<PublishURLChangeListener> publishURLChangeListeners = new LinkedList<PublishURLChangeListener>();
     private static Config singleton = new Config();
 
+    /**
+     * Config constructor is made private to enforce singleton pattern.
+     * We want the static getSingleton() method used instead.
+     * */
     private Config() {
 
     }
