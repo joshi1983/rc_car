@@ -8,7 +8,6 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.EditText;
 import android.widget.ImageView;
 import java.io.IOException;
 
@@ -23,22 +22,39 @@ public class MainActivity extends AppCompatActivity implements RemoteSettingsLis
     private CameraUtils cameraUtils = new CameraUtils();
     private PicturePublisher picturePublisher;
     private Config config = Config.getSingleton();
+    private ArduinoIO arduinoIO;
+    private RemoteSettings remoteSettings;
 
     @Override
     public void setSteeringValue(double newValue) {
+        arduinoIO.setSteeringValue(newValue);
     }
 
     @Override
     public void setSpeedValue(double newValue) {
+        arduinoIO.setSpeedValue(newValue);
     }
 
+    /**
+     * Called from RemoteSettings
+     */
     @Override
     public void recordingStopped() {
+        // nothing to do if we aren't recording.
+        if (!cameraUtils.isRecording())
+            return;
+
         cameraUtils.stopCamera();
     }
 
+    /**
+     * Called from RemoteSettings
+     */
     @Override
     public void recordingStarted() {
+        // nothing to do if we are already recording.
+        if (cameraUtils.isRecording())
+            return;
         try {
             cameraUtils.startCamera(this, surfaceView.getHolder());
         } catch (IOException ioE) {
@@ -57,6 +73,8 @@ public class MainActivity extends AppCompatActivity implements RemoteSettingsLis
         picturePublisher = new PicturePublisher(config.getPicturePublishURL());
         config.addPublishURLChangeListener(picturePublisher);
         cameraUtils.setPreviewCallback(picturePublisher);
+        arduinoIO = new ArduinoIO(this);
+        remoteSettings = new RemoteSettings(this);
         Log.d("CameraDemo", "Set picturePublisher for preview callbacks");
     }
 
@@ -74,10 +92,10 @@ public class MainActivity extends AppCompatActivity implements RemoteSettingsLis
 
     public void toggleRecordingClicked(View view) {
         if (cameraUtils.isRecording()) {
-            recordingStopped();
+            remoteSettings.stopRecording();
         }
         else {
-            recordingStarted();
+            remoteSettings.startRecording();
         }
     }
 
