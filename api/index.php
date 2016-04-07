@@ -121,14 +121,15 @@ function saveCameraFrame($frameData) {
 			.'Actual extension: '.$extension);
 
 	// check that the file size indicates that the file may be jpeg.
-	// 125 bytes is the size of a 1 by 1 pixel jpeg.
+	// 125 bytes is the size of a 1 by 1 pixel jpeg.  Anything smaller can't be a valid jpeg.
 	// 50 000 - 200 0000 is roughly the expected range.
-	// 10 000 000 is extremely large.
+	// over 16777216(16MB) is extremely large. 
+	//   - Too large to be expected and too large to fit in a MySQL mediumblob field.
 	$fileSize = $_FILES['frame']['size'];
 	if ($fileSize === 0)
 		throw new Exception("frame file size = 0.  _FILES = " . print_r($_FILES, true));
-	if ($fileSize < 125 || $fileSize > 10000000)
-		throw new Exception('frame file size must be in 125..10000000 but is ' . $fileSize);
+	if ($fileSize < 125 || $fileSize > 16777216)
+		throw new Exception('frame file size must be in 125..16777216 but is ' . $fileSize);
 
 	$target_file = $cameraFrameFile;
 	// save to file system.
@@ -162,7 +163,7 @@ function getCameraFrame() {
 $queryString = $_SERVER["QUERY_STRING"];
 $queryString = substr($queryString, strlen('page='));
 $routes = array(
-	'api/carState' => 'getCarStates',
+	'api/carStates' => 'getCarStates',
 	'api/saveCameraFrame' => 'saveCameraFrame',
 	'api/getCameraFrame' => 'getCameraFrame',
 	'api/preferences' => 'getPreferences',
@@ -179,7 +180,7 @@ if (strpos($queryString, 'api/getCameraFrame') === 0) {
 function logMessage($msg) {
 	$fp = fopen('log.txt', 'a+');
 	if ($fp) {
-		fputs($fp, '%s - Message: %s'."\r\n", date("l"), $msg);
+		fprintf($fp, '%s - Message: %s'."\r\n", date("Y-m-d H:i:s"), $msg);
 		fclose($fp);
 	}
 	else
@@ -187,7 +188,7 @@ function logMessage($msg) {
 }
 
 if ( isset($routes[$queryString]) ) {
-	logMessage('Processing request for route: ' + $queryString);
+	logMessage('Processing request for route: ' . $queryString);
 	try {
 		$response = call_user_func($routes[$queryString], $_REQUEST);
 	}
@@ -203,5 +204,6 @@ if ( isset($routes[$queryString]) ) {
 }
 else {
 	http_response_code(404);
+	logMessage('404 - ' . $queryString);
 	echo 'Unable to match route: "'. $queryString . '"';
 }
