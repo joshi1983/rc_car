@@ -24,7 +24,7 @@ create table `preference`
 create table `frame`
 (
 	`id` int primary key auto_increment,
-	`is_recording` mediumblob, -- for jpeg data
+	`jpeg_data` mediumblob, -- for jpeg data
 	`latest_change` datetime
 );
 
@@ -38,4 +38,8 @@ insert into `car_control_state`
 
 insert into `user`(`id`, `username`, `password_hash`) values
 (1, 'josh', '');
+
+insert into `frame`(`id`, `jpeg_data`, `latest_change`) values
+(1, null, now());
+
 
