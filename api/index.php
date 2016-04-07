@@ -46,9 +46,11 @@ function saveControlState($controlStateData, $is_desired) {
 	if( $msg )
 		throw new Exception($msg);
 	
-	$stmt = $conn->prepare('update car_control_state set steering_value=?, speed_value=? where is_desired=?');
+	$stmt = $conn->prepare('update car_control_state set steering_value=?, speed_value=?, latest_change=NOW() where is_desired=?');
 	if ( !$stmt )
-		throw new Exception('Unable to prepare statement.');
+		throw new Exception('Unable to prepare statement in saveControlState. is_desired='
+			.$is_desired.', steering_value='.$controlStateData['steering_value'].', speed_value='.$controlStateData['speed_value'].', message='.
+			$conn->error);
 	
 	$stmt->bind_param('ddi', $controlStateData['steering_value'], 
 		$controlStateData['speed_value'], $is_desired);
@@ -70,9 +72,9 @@ function setRecordingVideo($isRecording) {
 	
 	$isRecording = $isRecording ? 1 : 0;
 	
-	$stmt = $conn->prepare('update preference set is_recording=?');
+	$stmt = $conn->prepare('update preference set is_recording=?, latest_change=now()');
 	if ( !$stmt )
-		throw new Exception('Unable to prepare statement.');
+		throw new Exception('Unable to prepare statement in setRecordingVideo.');
 	
 	$stmt->bind_param('i', $isRecording);
 	$result = $stmt->execute();	
@@ -100,10 +102,8 @@ function getPreferences($data) {
 	return $result;
 }
 
-$cameraFrameFile = 'data/temp.jpg';
-
 function saveCameraFrame($frameData) {
-	global $cameraFrameFile;
+	global $conn;
 	
 	// check that there is a 'frame' specified.
 	if (!isset($_FILES['frame']))
@@ -131,32 +131,39 @@ function saveCameraFrame($frameData) {
 	if ($fileSize < 125 || $fileSize > 16777216)
 		throw new Exception('frame file size must be in 125..16777216 but is ' . $fileSize);
 
-	$target_file = $cameraFrameFile;
-	// save to file system.
-	if (move_uploaded_file($_FILES["frame"]["tmp_name"], $target_file)) {
-		
-	}
-	else
-		throw new Exception('Unable to move to target file: ' . $target_file);
+	$jpegData = file_get_contents($_FILES["frame"]["tmp_name"]);
+	if ( !$jpegData )
+		throw new Exception('Unable to read jpeg data from temp file in saveCameraFrame.');
+	
+	$stmt = $conn->prepare('update frame set jpeg_data=?, latest_change=now() where id=1');
+	if ( !$stmt )
+		throw new Exception('Unable to prepare statement in saveCameraFrame.');
+	
+	$null = NULL;
+	$stmt->bind_param("b", $null);
+	$stmt->send_long_data(0, $jpegData);
+	$result = $stmt->execute();	
 	
 	$result = array('success' => true);
 	return $result;
 }
 
 function getCameraFrame() {
-	global $cameraFrameFile;
-	$size = filesize($cameraFrameFile);
+	global $conn;
+	
+	$stmt = $conn->prepare("select jpeg_data from frame where id=1");
+	
+	$stmt->execute();
+	$stmt->store_result();
+
+	$stmt->bind_result($jpegData);
+	$stmt->fetch();
 	
 	header('Content-Type: image/jpeg');
-	header('Content-Length: '.$size);
 	
-	$fp = fopen($cameraFrameFile, 'rb');
-	if (flock($fp, LOCK_SH)) {
-		fpassthru($fp);
-		fflush($fp);
-		flock($fp, LOCK_UN);
-	}
-	fclose($fp);
+	echo $jpegData;
+	//$stmt->close();
+	
 	exit;
 }
 
