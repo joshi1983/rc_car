@@ -10,6 +10,8 @@ function RcCar() {
 	self.latest_steering_value = ko.observable(5);
 	self.latest_drive_value = ko.observable(5);
 	
+	var refreshLatestStateInterval = 400;
+	
 	function sendStateToServer() {
 		var carState = {
 			'steering_value': self.steering_value(),
@@ -27,21 +29,40 @@ function RcCar() {
 	function retrieveState() {
 		// send message to server.
 		$.ajax({
-			'url': '/rc_car/api/carState',
+			'url': '/rc_car/api/carStates',
 			'type': 'json',
 			'success': function(response) {
 				self.steering_value(response.desired.steering_value);
 				self.drive_value(response.desired.speed_value);
 				self.latest_steering_value(response.latest.steering_value);
 				self.latest_drive_value(response.latest.speed_value);
-				console.log(JSON.stringify(response));
 			}
 		});
 	}
-	retrieveState();
 	
-	self.steering_value.subscribe(sendStateToServer);
-	self.drive_value.subscribe(sendStateToServer);
+	function retrieveLatestState() {
+		// send message to server.
+		$.ajax({
+			'url': '/rc_car/api/carStates',
+			'type': 'json',
+			'success': function(response) {
+				self.latest_steering_value(response.latest.steering_value);
+				self.latest_drive_value(response.latest.speed_value);
+			}
+		});
+	}
+	
+	self.activate = function() {
+		retrieveState();
+		
+		self.steering_value.subscribe(sendStateToServer);
+		self.drive_value.subscribe(sendStateToServer);
+		window.setInterval(retrieveLatestState, refreshLatestStateInterval);
+	};
+	
+	self.detached = function() {
+		
+	};
 }
 
 return RcCar;
