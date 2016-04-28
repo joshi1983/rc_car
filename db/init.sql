@@ -1,10 +1,15 @@
+create table `event`
+(
+	`id` int primary key auto_increment,
+	`event_type` tinyint unsigned not null
+);
+
 create table `car_control_state`
 (
 	`id` int primary key auto_increment,
 	`steering_value` float not null default 0,
 	`speed_value` float not null default 0,
-	`is_desired` tinyint(1) not null default 0,
-	`latest_change` datetime
+	`is_desired` tinyint(1) not null default 0
 );
 
 create table `user`
@@ -17,29 +22,25 @@ create table `user`
 create table `preference`
 (
 	`id` int primary key auto_increment,
-	`is_recording` tinyint(1) default 0,
-	`latest_change` datetime
+	`is_recording` tinyint(1) default 0
 );
 
 create table `frame`
 (
 	`id` int primary key auto_increment,
-	`jpeg_data` mediumblob, -- for jpeg data
-	`latest_change` datetime
+	`jpeg_data` mediumblob -- for jpeg data
 );
 
-insert into `preference`(`id`, `is_recording`, `latest_change`) values
-(1, 0, NOW());
+insert into `preference`(`id`, `is_recording`) values
+(1, 0);
 
 insert into `car_control_state`
-(`id`, `steering_value`, `speed_value`, `is_desired`, `latest_change`) values
-(1, 0, 0, 1, NOW()),
-(2, 0, 0, 0, NOW());
+(`id`, `steering_value`, `speed_value`, `is_desired`) values
+(1, 0, 0, 1),
+(2, 0, 0, 0);
 
 insert into `user`(`id`, `username`, `password_hash`) values
 (1, 'josh', '');
 
-insert into `frame`(`id`, `jpeg_data`, `latest_change`) values
-(1, null, now());
-
-
+insert into `frame`(`id`, `jpeg_data`) values
+(1, null);
