@@ -56,17 +56,29 @@ function VideoDisplay() {
 		});
 	}
 	
+	var imageDownloadsInProgressCount = 0;
+	
 	function updateDisplay() {
-		var newValue = (new Date()).getTime();
-		var url = 'api/getCameraFrame?t=' + newValue;
-		
-		// use a trick to preload the image.
-		// trick suggested at: http://stackoverflow.com/questions/8647305/preload-background-image
-		var $img = $( '<img src="' + url + '">' );
-		$img.bind( 'load', function(){
-			image_url(url);
-		} );
-		if( $img[0].width ){ $img.trigger( 'load' ); }
+		if( true || imageDownloadsInProgressCount < 1 ) {
+			var newValue = (new Date()).getTime();
+			var url = 'api/getCameraFrame?t=' + newValue;
+			
+			// use a trick to preload the image.
+			// trick suggested at: http://stackoverflow.com/questions/8647305/preload-background-image
+			var $img = $( '<img src="' + url + '">' );
+			imageDownloadsInProgressCount++;
+			$img.bind( 'load', function(response, status, xhr) {
+				imageDownloadsInProgressCount--;
+				if ( status === 'error' )
+					console.log('error loading video frame image from: ' + url );
+				else {
+					image_url(url);
+				}
+			} );
+			if( $img[0].width ) {
+				$img.trigger( 'load' ); 
+			}
+		}
 	}
 	
 	function updateAutoRefresher() {
