@@ -8,12 +8,36 @@ $connectionConfig = getMySQLConnection();
 $conn = new mysqli($connectionConfig->host, $connectionConfig->username, 
 	$connectionConfig->password, $connectionConfig->db_name);
 
+define('EVENT_TYPE_PREFERENCE_CHANGE', 1);
+define('EVENT_TYPE_RECORDING_STATE_CHANGE', 2);
+define('EVENT_TYPE_DESIRED_CAR_STATE_CHANGE', 3);
+define('EVENT_TYPE_LATEST_CAR_STATE_CHANGE', 4);
+define('EVENT_TYPE_FRAME_CHANGE', 5);
+
 // Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
 Model::setDefaultConnection($conn);
+
+function clearUselessEvents() {
+	global $conn;
+	$stmt = $conn->execute('delete from event as outer_event where id not in '
+	.'(select MAX(id) from event where event.event_type=outer_event.event_type)');
+	
+}
+
+function eventTriggered($eventType) {
+	global $conn;
+
+	$stmt = $conn->prepare('insert into `event`(`event_type`) values(?)');
+	if ( !$stmt )
+		throw new Exception('Unable to prepare statement in eventTriggered.');
+
+	$stmt->bind_param('i', $eventType);
+	$stmt->execute();
+}
 
 function getCarStates() {
 	$desired = CarControlState::getDesiredState();
@@ -46,7 +70,7 @@ function saveControlState($controlStateData, $is_desired) {
 	if( $msg )
 		throw new Exception($msg);
 	
-	$stmt = $conn->prepare('update car_control_state set steering_value=?, speed_value=?, latest_change=NOW() where is_desired=?');
+	$stmt = $conn->prepare('update car_control_state set steering_value=?, speed_value=? where is_desired=?');
 	if ( !$stmt )
 		throw new Exception('Unable to prepare statement in saveControlState. is_desired='
 			.$is_desired.', steering_value='.$controlStateData['steering_value'].', speed_value='.$controlStateData['speed_value'].', message='.
@@ -55,6 +79,12 @@ function saveControlState($controlStateData, $is_desired) {
 	$stmt->bind_param('ddi', $controlStateData['steering_value'], 
 		$controlStateData['speed_value'], $is_desired);
 	$result = $stmt->execute();
+	if ($is_desired)
+		$eventType = EVENT_TYPE_DESIRED_CAR_STATE_CHANGE;
+	else
+		$eventType = EVENT_TYPE_LATEST_CAR_STATE_CHANGE;
+	
+	eventTriggered($eventType);
 	 
 	return array('success' => $result);
 }
@@ -72,7 +102,7 @@ function setRecordingVideo($isRecording) {
 	
 	$isRecording = $isRecording ? 1 : 0;
 	
-	$stmt = $conn->prepare('update preference set is_recording=?, latest_change=now()');
+	$stmt = $conn->prepare('update preference set is_recording=?');
 	if ( !$stmt )
 		throw new Exception('Unable to prepare statement in setRecordingVideo.');
 	
@@ -135,7 +165,7 @@ function saveCameraFrame($frameData) {
 	if ( !$jpegData )
 		throw new Exception('Unable to read jpeg data from temp file in saveCameraFrame.');
 	
-	$stmt = $conn->prepare('update frame set jpeg_data=?, latest_change=now() where id=1');
+	$stmt = $conn->prepare('update frame set jpeg_data=? where id=1');
 	if ( !$stmt )
 		throw new Exception('Unable to prepare statement in saveCameraFrame.');
 	
@@ -143,6 +173,7 @@ function saveCameraFrame($frameData) {
 	$stmt->bind_param("b", $null);
 	$stmt->send_long_data(0, $jpegData);
 	$result = $stmt->execute();	
+	eventTriggered(EVENT_TYPE_FRAME_CHANGE);
 	
 	$result = array('success' => true);
 	return $result;
@@ -167,21 +198,43 @@ function getCameraFrame() {
 	exit;
 }
 
-$queryString = $_SERVER["QUERY_STRING"];
-$queryString = substr($queryString, strlen('page='));
-$routes = array(
-	'api/carStates' => 'getCarStates',
-	'api/saveCameraFrame' => 'saveCameraFrame',
-	'api/getCameraFrame' => 'getCameraFrame',
-	'api/preferences' => 'getPreferences',
-	'api/saveDesiredState' => 'saveDesiredControlState',
-	'api/saveLatestControlState' => 'saveLatestControlState',
-	'api/startRecording' => 'startRecording',
-	'api/stopRecording' => 'stopRecording'
-);
+function waitForEventsNewerThan($latest, $eventTypes) {
+	global $conn;
 
-if (strpos($queryString, 'api/getCameraFrame') === 0) {
-	$queryString = 'api/getCameraFrame';
+	// skip if latest is NULL.
+	if (is_numeric($latest)) {
+		$latest = intval($latest);
+		$eventTypesExpression = '(' . implode(',', $eventTypes) . ')';
+		$stmt = $conn->prepare("select max(id) as id, event_type from `event` where id > ? and event_type in "
+			.$eventTypesExpression.' group by event_type');
+		$stmt->bind_param('i', $latest);
+		
+		// wait until next frame is available.
+		while (true) {
+			$stmt->execute();
+			$rawData = $stmt->fetch_all();
+			if ($rawData) {
+				$stmt->close();
+				return $rawData;
+			}
+			
+			// sleep for a short time(50000 microseconds or 50ms) 
+			// to let MySQL and other resources do other things.
+			usleep(50000);
+		}
+	}
+	return $latest;
+}
+
+function getNextCameraFrame($latest) {
+	//echo 'getNextCameraFrame function called.  latest = '.$latest;
+	waitForEventsNewerThan($latest, array(EVENT_TYPE_FRAME_CHANGE));
+	getCameraFrame();
+}
+
+function getNextTabletEvents($latest) {
+	waitForEventsNewerThan($latest, array(EVENT_TYPE_FRAME_CHANGE));
+	
 }
 
 function logMessage($msg) {
@@ -194,8 +247,52 @@ function logMessage($msg) {
 		return '  Also, unable to append to log file';
 }
 
+$queryString = $_SERVER["QUERY_STRING"]; 
+// queryString could be something like 'rc_car/index.php?page=api/carStates'.
+$queryString = substr($queryString, strlen('page='));
+$route_regexs = array(
+	'#api/getNextCameraFrame/([0-9]+)#i' => 'getNextCameraFrame',
+	'#api/getNextTabletEvents/([0-9]+)#i' => 'getNextTabletEvents',
+);
+
+$routes = array(
+	'api/carStates' => 'getCarStates',
+	'api/saveCameraFrame' => 'saveCameraFrame',
+	'api/getCameraFrame' => 'getCameraFrame',
+	'api/getNextCameraFrame' => 'getNextCameraFrame',
+	'api/preferences' => 'getPreferences',
+	'api/saveDesiredState' => 'saveDesiredControlState',
+	'api/saveLatestControlState' => 'saveLatestControlState',
+	'api/startRecording' => 'startRecording',
+	'api/stopRecording' => 'stopRecording'
+);
+$matches = array();
+foreach($route_regexs as $regex => $func_name) {
+	$result = preg_match($regex, $queryString, $matches);
+	if( $result === FALSE )
+		logMessage('error processing regex: '.$regex);
+	else if ($result === 1) {
+		try {
+			header('Content-Type: text/plain');
+			array_shift($matches); // remove the first match.
+			$response = call_user_func_array($func_name, $matches);
+		}
+		catch (Exception $e) {
+			$response = array('msg' => 'ERROR: '.$e->getMessage());
+			http_response_code(500);
+			$extraMessage = logMessage($e->getMessage());
+			if ($extraMessage)
+				$response['msg'] .= $extraMessage;
+		}
+	}
+}
+
+if (strpos($queryString, 'api/getCameraFrame') === 0) {
+	$queryString = 'api/getCameraFrame';
+}
+
 if ( isset($routes[$queryString]) ) {
-	logMessage('Processing request for route: ' . $queryString);
+	// logMessage('Processing request for route: ' . $queryString);
 	try {
 		$response = call_user_func($routes[$queryString], $_REQUEST);
 	}
