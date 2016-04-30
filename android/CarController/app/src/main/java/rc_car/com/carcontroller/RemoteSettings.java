@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.DataOutputStream;
 import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -92,7 +93,7 @@ public class RemoteSettings {
                 else
                     listener.recordingStopped();
             }
-            json = readJsonFromUrl(config.getCarStateURL());
+            json = readJsonFromUrl(config.getCarStatesURL());
             JSONObject desired = json.getJSONObject("desired");
             listener.setSpeedValue(desired.getDouble("speed_value"));
             listener.setSteeringValue(desired.getDouble("steering_value"));
@@ -108,14 +109,21 @@ public class RemoteSettings {
         }
     }
 
-    private static void sendPostRequestToURL(String url) {
+    private static void sendPostRequestToURL(String url, String bodyParameters) {
         try {
             HttpURLConnection http = (HttpURLConnection)(new URL(url).openConnection());
             http.setRequestMethod("POST");
             http.setUseCaches(false);
             http.setDoInput(true);
-            http.setDoOutput(false);
+            http.setDoOutput(true);
             http.connect();
+            if (bodyParameters != null) {
+                DataOutputStream wr = new DataOutputStream (
+                        http.getOutputStream ());
+                wr.writeBytes (bodyParameters);
+                wr.flush ();
+                wr.close();
+            }
             InputStream in = new BufferedInputStream(http.getInputStream());
             in.read();
             http.disconnect();
@@ -131,11 +139,20 @@ public class RemoteSettings {
      * Used to keep the HTTP post sending off the main UI thread
      * */
     private class HttpPostTask extends AsyncTask<String, Void, Void> {
+        private String bodyParameters;
+
+        public HttpPostTask(String bodyParameters) {
+            this.bodyParameters = bodyParameters;
+        }
+
+        public HttpPostTask() {
+            this(null);
+        }
 
         @Override
         protected Void doInBackground(String... urls) {
             Log.d("RemoteSettings", "HttpPostTask, doInBackground called.  publish URL: " + urls[0]);
-            sendPostRequestToURL(urls[0]);
+            sendPostRequestToURL(urls[0], bodyParameters);
             return null;
         }
     }
