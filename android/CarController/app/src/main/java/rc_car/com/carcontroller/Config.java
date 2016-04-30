@@ -54,8 +54,8 @@ public class Config {
     /**
      * For use in RemoteSettings class
      * */
-    public String getCarStateURL() {
-        return protocol + "://" + getServerHost() + "/rc_car/api/getCarStates";
+    public String getCarStatesURL() {
+        return protocol + "://" + getServerHost() + "/rc_car/api/carStates";
     }
 
     /**
