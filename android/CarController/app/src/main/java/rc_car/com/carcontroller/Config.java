@@ -80,6 +80,10 @@ public class Config {
         return protocol + "://" + getServerHost() + "/rc_car/api/saveCameraFrame";
     }
 
+    public String getSaveLatestControlStateURL() {
+        return protocol + "://" + getServerHost() + "/rc_car/api/saveLatestControlState";
+    }
+
     public void save() {
         // FIXME: save to preferences.
     }
