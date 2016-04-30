@@ -21,6 +21,10 @@ public class SettingsActivity extends AppCompatActivity {
         usbDevicesList = (EditText)findViewById(R.id.usb_devices);
     }
 
+    public void backClicked(View view) {
+        onBackPressed();
+    }
+
     private String testArduinoConnection() {
         return ArduinoIO.getUSBDevicesDescription(this);
     }
