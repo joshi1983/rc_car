@@ -95,8 +95,7 @@ public class RemoteSettings {
             }
             json = readJsonFromUrl(config.getCarStatesURL());
             JSONObject desired = json.getJSONObject("desired");
-            listener.setSpeedValue(desired.getDouble("speed_value"));
-            listener.setSteeringValue(desired.getDouble("steering_value"));
+            listener.setDesiredState(new CarState(desired.getDouble("steering_value"), desired.getDouble("speed_value")));
         }
         catch (MalformedURLException e) {
             Log.d("RemoteSettings", "Unable to download preferences due to bad URL: " + e.getMessage());
