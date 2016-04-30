@@ -22,7 +22,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     public void backClicked(View view) {
-        onBackPressed();
+        finish();
     }
 
     private String testArduinoConnection() {
