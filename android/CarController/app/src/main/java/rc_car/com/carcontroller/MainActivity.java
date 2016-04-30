@@ -68,8 +68,8 @@ public class MainActivity extends AppCompatActivity implements RemoteSettingsLis
         picturePublisher = new PicturePublisher(config.getPicturePublishURL());
         config.addPublishURLChangeListener(picturePublisher);
         cameraUtils.setPreviewCallback(picturePublisher);
-        arduinoIO = new ArduinoIO(this);
         remoteSettings = new RemoteSettings(this);
+        arduinoIO = new ArduinoIO(this, remoteSettings);
         Log.d("CameraDemo", "Set picturePublisher for preview callbacks");
     }
 
