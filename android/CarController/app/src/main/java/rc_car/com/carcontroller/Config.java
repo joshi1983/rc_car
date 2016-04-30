@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Config {
-    private String hostName = "192.168.1.53:8000";
+    private String hostName = "192.168.1.54:8000";
     private String protocol = "http";
     private List<PublishURLChangeListener> publishURLChangeListeners = new LinkedList<PublishURLChangeListener>();
     private static Config singleton = new Config();
