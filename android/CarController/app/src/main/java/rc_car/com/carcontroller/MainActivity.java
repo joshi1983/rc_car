@@ -26,13 +26,8 @@ public class MainActivity extends AppCompatActivity implements RemoteSettingsLis
     private RemoteSettings remoteSettings;
 
     @Override
-    public void setSteeringValue(double newValue) {
-        arduinoIO.setSteeringValue(newValue);
-    }
-
-    @Override
-    public void setSpeedValue(double newValue) {
-        arduinoIO.setSpeedValue(newValue);
+    public void setDesiredState(CarState newCarState) {
+        arduinoIO.setDesiredCarState(newCarState);
     }
 
     /**
