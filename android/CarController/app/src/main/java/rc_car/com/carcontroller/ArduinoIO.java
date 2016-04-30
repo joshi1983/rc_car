@@ -19,6 +19,9 @@ public class ArduinoIO {
     private CarState desired = new CarState(0, 0);
     private LatestCarStateListener latestCarStateListener;
 
+    /**
+     * Used in SettingsActivity
+     */
     public static String getUSBDevicesDescription(Context context) {
         String result = "";
         UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
