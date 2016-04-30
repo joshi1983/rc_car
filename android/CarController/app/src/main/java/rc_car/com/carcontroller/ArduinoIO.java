@@ -16,6 +16,8 @@ public class ArduinoIO {
     private UsbManager usbManager;
     private UsbDevice arduinoDevice;
     private int boadRate = 9600; // must match with Arduino code
+    private CarState desired = new CarState(0, 0);
+    private LatestCarStateListener latestCarStateListener;
 
     public static String getUSBDevicesDescription(Context context) {
         String result = "";
@@ -35,8 +37,12 @@ public class ArduinoIO {
         return result;
     }
 
-    public ArduinoIO(Context context) {
+    public ArduinoIO(Context context, LatestCarStateListener latestCarStateListener) {
+        if (latestCarStateListener == null)
+            throw new NullPointerException("LatestCarStateListener must not be null");
+
         usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
+        this.latestCarStateListener = latestCarStateListener;
     }
 
     /**
@@ -60,5 +66,10 @@ public class ArduinoIO {
         }
     }
 
+    public void setDesiredCarState(CarState newState) {
+        desired.copyFrom(newState);
 
+        // FIXME: remove this after testing.
+        latestCarStateListener.setLatestCarState(desired);
+    }
 }
