@@ -13,16 +13,21 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.DataOutputStream;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 
 /**
  * RemoteSettings is responsible for downloading preferences from the web
  * application and, on rare occasions, sending preferences to it.
+ *
+ * RemoteSettings is also responsible for transmitting latest confirmed car
+ * state information to the remote web application.
  */
-public class RemoteSettings {
+public class RemoteSettings implements LatestCarStateListener {
     private boolean isRecording;
     private Config config = Config.getSingleton();
     private int updateInterval = 2000;
@@ -182,6 +187,27 @@ public class RemoteSettings {
         listener.recordingStopped();
         if (config.isServerRunning()) {
             new HttpPostTask().execute(config.getStopRecordingURL());
+        }
+    }
+
+    @Override
+    public void setLatestCarState(CarState newState) {
+        sendLatestControlStateToWebApp(newState.getSteeringValue(), newState.getSpeedValue());
+    }
+
+    /**
+     * Called after the ArduinoDevice echos the values back to the Android device.
+     */
+    public void sendLatestControlStateToWebApp(double newSteeringValue, double newSpeedValue) {
+        if (config.isServerRunning()) {
+            try {
+                String parameters = "steering_value=" + URLEncoder.encode("" + newSteeringValue, "UTF-8");
+                parameters += "&speed_value=" + URLEncoder.encode("" + newSpeedValue, "UTF-8");
+                new HttpPostTask(parameters).execute(config.getSaveLatestControlStateURL());
+            }
+            catch (UnsupportedEncodingException badEncoding) {
+                Log.d("RemoteSettings", "Unsupported encoding: " + badEncoding);
+            }
         }
     }
 }
