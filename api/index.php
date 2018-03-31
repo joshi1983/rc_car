@@ -8,7 +8,6 @@ $connectionConfig = getMySQLConnection();
 $conn = new mysqli($connectionConfig->host, $connectionConfig->username, 
 	$connectionConfig->password, $connectionConfig->db_name);
 
-define('EVENT_TYPE_PREFERENCE_CHANGE', 1);
 define('EVENT_TYPE_RECORDING_STATE_CHANGE', 2);
 define('EVENT_TYPE_DESIRED_CAR_STATE_CHANGE', 3);
 define('EVENT_TYPE_LATEST_CAR_STATE_CHANGE', 4);
@@ -21,11 +20,24 @@ if ($conn->connect_error) {
 
 Model::setDefaultConnection($conn);
 
-function clearUselessEvents() {
+function clearUselessEvents($eventType = 0) {
 	global $conn;
-	$stmt = $conn->execute('delete from event as outer_event where id not in '
-	.'(select MAX(id) from event where event.event_type=outer_event.event_type)');
-	
+	if ($eventType === 0) {	
+		$stmt = $conn->execute(
+			'delete from event as outer_event where id not in '
+			.'(select MAX(id) from event where event.event_type=outer_event.event_type)'
+		);
+	}
+	else {
+		$res = $conn->query('select * from event where event_type='.$eventType);
+		$rawData = $res->fetch_assoc();
+
+		$recent_event_id = $rawData['id'];
+		$stmt = $conn->execute(
+			'delete from event as outer_event where id not in '
+			.'(select MAX(id) from event where event.event_type=outer_event.event_type)'
+		);
+	}
 }
 
 function eventTriggered($eventType) {
@@ -107,7 +119,9 @@ function setRecordingVideo($isRecording) {
 		throw new Exception('Unable to prepare statement in setRecordingVideo.');
 	
 	$stmt->bind_param('i', $isRecording);
-	$result = $stmt->execute();	
+	$result = $stmt->execute();
+	eventTriggered(EVENT_TYPE_RECORDING_STATE_CHANGE);
+	
 	return array('success' => true);
 }
 
@@ -232,8 +246,14 @@ function getNextCameraFrame($latest) {
 	getCameraFrame();
 }
 
+// Used for Android application
 function getNextTabletEvents($latest) {
-	waitForEventsNewerThan($latest, array(EVENT_TYPE_FRAME_CHANGE));
+	waitForEventsNewerThan(
+		$latest, array(
+			EVENT_TYPE_DESIRED_CAR_STATE_CHANGE, 
+			EVENT_TYPE_LATEST_CAR_STATE_CHANGE
+		)
+	);
 	
 }
 
