@@ -3,7 +3,8 @@ package rc_car.com.carcontroller;
 /**
  * CarState is basically a data transfer object or a Java bean for car state.
  *
- * It may represent either desired state or the latest actual state echoed back from the Arduino device
+ * It may represent either desired state or the latest actual state echoed back
+ * from the Arduino device
  */
 public class CarState {
     private double speedValue;

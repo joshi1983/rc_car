@@ -8,7 +8,8 @@ import android.view.SurfaceHolder;
 import java.io.IOException;
 
 /**
- * CameraUtils wraps up functionality for controling and getting images from the Android camera device.
+ * CameraUtils wraps up functionality for controling and getting images from
+ * the Android camera device.
  */
 public class CameraUtils implements SurfaceHolder.Callback {
     private Camera camera;
