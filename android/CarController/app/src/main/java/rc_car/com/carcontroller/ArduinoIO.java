@@ -28,7 +28,6 @@ public class ArduinoIO {
         UsbAccessory[] accessories = usbManager.getAccessoryList ();
         HashMap<String , UsbDevice> deviceList = usbManager.getDeviceList();
         Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
-        String i = "";
         if (accessories != null)
             Log.d("ArduinoIO", "accessories.length = " + accessories.length + ".");
 
