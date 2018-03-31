@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1461425888 source:c:\wamp\www\rc_car\desktop\windows\usb\usb example\main.cpp
+	<windows.h>
+	<iostream>
+

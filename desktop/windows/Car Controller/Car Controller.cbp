@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Car Controller" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Car Controller" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="../../../../../../opencv/build/include/opencv2" />
+					<Add directory="../../../../../../opencv/build/include" />
+					<Add directory="C:/opencv/sources/include/opencv" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Car Controller" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Linker>
+			<Add library="gdi32" />
+			<Add library="user32" />
+			<Add library="kernel32" />
+			<Add library="comctl32" />
+			<Add library="C:\opencv\sources\lib\Debug\opencv_core310d.lib" />
+			<Add library="C:\opencv\sources\lib\Debug\opencv_highgui310d.lib" />
+			<Add library="C:\opencv\sources\lib\Debug\opencv_videoio310d.lib" />
+			<Add library="C:\opencv\sources\lib\Debug\opencv_video310d.lib" />
+			<Add library="C:\opencv\sources\lib\Debug\opencv_ml310d.lib" />
+			<Add library="C:\opencv\sources\lib\Debug\opencv_objdetect310d.lib" />
+			<Add library="C:\opencv\sources\lib\Debug\opencv_videostab310d.lib" />
+			<Add library="C:\opencv\sources\lib\Debug\opencv_calib3d310d.lib" />
+		</Linker>
+		<Unit filename="arduino_io.cpp" />
+		<Unit filename="main.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
